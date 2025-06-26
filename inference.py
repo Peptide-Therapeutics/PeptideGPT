@@ -124,8 +124,17 @@ filtered_prots = df_valid[df_valid['ValidProtein']]['Sequence'].tolist()
 print(f"✅ {len(filtered_prots)} proteins passed hull validity check.")
 
 # ── ESMFold Structure ──────────────────────────────────────────────────────────
-esm_tok   = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
-esm_model = EsmForProteinFolding.from_pretrained("facebook/esmfold_v1").to(device)
+
+# ✅ Filtering sequences before ESMFold to avoid truncation
+MAX_AA_FOR_ESMFOLD = 25  # You can adjust this value if needed
+top_prots = [seq for seq in top_prots if len(seq) <= MAX_AA_FOR_ESMFOLD]
+
+print(f'{len(top_prots)} sequences are <= {MAX_AA_FOR_ESMFOLD} AA and will be used for ESMFold structure prediction.')
+print('Starting structure check...')
+
+# ✅ Load ESMFold safely
+esm_model = EsmForProteinFolding.from_pretrained("facebook/esmfold_v1")
+esm_tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
 
 plddt_results = []
 for seq in tqdm(filtered_prots):
